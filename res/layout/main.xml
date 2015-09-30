@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!--
-	Copyright 2010 Kwok Ho Yin
+	Copyright 2010 - 2015 Kwok Ho Yin
 
    	Licensed under the Apache License, Version 2.0 (the "License");
    	you may not use this file except in compliance with the License.
@@ -36,8 +36,7 @@ android:layout_height="wrap_content"
 <Spinner
 android:id="@+id/SpinnerCurrencyA"
 android:layout_width="160dip"
-android:layout_height="50dip" 
-android:layout_weight="1" 
+android:layout_height="50dip"
 android:layout_alignParentTop="true" 
 android:layout_alignParentLeft="true"
 >
@@ -48,9 +47,9 @@ android:layout_width="160dip"
 android:layout_height="50dip"
 android:text=""
 android:textSize="18sp"
-android:layout_weight="1"
 android:layout_alignParentTop="true"
-android:layout_alignParentRight="true" 
+android:layout_alignParentRight="true"
+android:inputType="numberDecimal" 
 >
 </EditText>
 </RelativeLayout>
@@ -63,8 +62,7 @@ android:layout_height="wrap_content"
 <Spinner
 android:id="@+id/SpinnerCurrencyB"
 android:layout_width="160dip"
-android:layout_height="50dip" 
-android:layout_weight="1" 
+android:layout_height="50dip"
 android:layout_alignParentTop="true" 
 android:layout_alignParentLeft="true"
 >
@@ -75,13 +73,31 @@ android:layout_width="160dip"
 android:layout_height="50dip"
 android:text=""
 android:textSize="18sp"
-android:layout_weight="1"
 android:layout_alignParentTop="true"
-android:layout_alignParentRight="true" 
+android:layout_alignParentRight="true"
+android:inputType="numberDecimal" 
 >
 </EditText>
-
 </RelativeLayout>
+
+<LinearLayout
+android:id="@+id/main_layout_menu"
+android:layout_width="fill_parent"
+android:layout_height="wrap_content"
+>
+
+<Button
+android:id="@+id/MenuButton"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="@string/szMenuButton"
+android:textStyle="bold" />    
+    
+<LinearLayout
+    android:id="@+id/main_layout_0"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
 
 <TextView 
 android:layout_height="wrap_content" 
@@ -92,7 +108,7 @@ android:text="@string/szlatestCurrencyRate">
 </TextView>
 
 <LinearLayout
-android:id="@+id/main_layout"
+android:id="@+id/main_layout_1"
 android:layout_width="fill_parent"
 android:layout_height="wrap_content"
 >
@@ -135,11 +151,16 @@ android:text="">
 </TextView>
 </LinearLayout>
 
+</LinearLayout>
+
+</LinearLayout>
+
 <ListView
 android:id="@+id/ListViewRate"
 android:layout_width="fill_parent"
-android:layout_height="wrap_content"
+android:layout_height="0dp"
 android:layout_weight="1"
 >
 </ListView>
+
 </LinearLayout>

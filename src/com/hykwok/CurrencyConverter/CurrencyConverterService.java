@@ -96,17 +96,15 @@ public class CurrencyConverterService extends Service {
 	}
 	
 	@Override
-	public void onStart(Intent i, int startId) {
-		Log.d(TAG, "onStart >>>>>");    	
-		super.onStart(i, startId);
-		
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		Log.d(TAG, "onStartCommand >>>>>");
 		// default values
 		ref_time = 0;
 		ref_roaming = false;
 		
 		try {
-			ref_time = i.getExtras().getLong(BROADCAST_KEY_LASTUPDATETIME);
-			ref_roaming = i.getExtras().getBoolean(BROADCAST_KEY_ROAMING_OPT, false);
+			ref_time = intent.getExtras().getLong(BROADCAST_KEY_LASTUPDATETIME);
+			ref_roaming = intent.getExtras().getBoolean(BROADCAST_KEY_ROAMING_OPT, false);
 		} catch (Exception e) {
 			Log.e(TAG, "onStart: " + e.toString());
 		}
@@ -116,8 +114,11 @@ public class CurrencyConverterService extends Service {
 		parser_thread = new Thread(mTask);
 		parser_thread.start();
 		
-    	Log.d(TAG, "onStart <<<<<");
+    	Log.d(TAG, "onStartCommand <<<<<");
+    	
+    	return super.onStartCommand(intent, flags, startId);
 	}
+	
 	
 	@Override
 	public void onDestroy() {

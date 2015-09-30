@@ -1,5 +1,5 @@
 /*
-	Copyright 2010-2012 Kwok Ho Yin
+	Copyright 2010-2015 Kwok Ho Yin
 
    	Licensed under the Apache License, Version 2.0 (the "License");
    	you may not use this file except in compliance with the License.
@@ -58,11 +58,9 @@ public class CurrencyRateListAdapter extends BaseAdapter {
 		for(int j=0; j<name.length; j++) {
 			mName[j] = context.getString(name[j]);
 		}
-				
-		mRateData = rate_data;
 		
 		// update currency rate
-		updateCurrencyRate();
+		updateCurrencyRate(rate_data);
 				
 		// set default currency
 		mBaseCurrencyPosition = 0;
@@ -94,7 +92,7 @@ public class CurrencyRateListAdapter extends BaseAdapter {
 		try {
 			if(convertView == null) {
 				// uses currencyratelist.xml to display each currency selection
-				convertView = mInflater.inflate(R.layout.currencyratelist, null);
+				convertView = mInflater.inflate(R.layout.currencyratelist, parent, false);
 				// then create a holder for this view for faster access
 				holder = new ViewHolder();
 				
@@ -149,11 +147,15 @@ public class CurrencyRateListAdapter extends BaseAdapter {
 		return result;
 	}
 	
-	public void updateCurrencyRate() {
+	public void updateCurrencyRate(Cursor rate_data) {
 		Log.d(TAG, ">>>>> updateCurrencyRate");
 				
 		// update currency rate data
-		mRateData.requery();
+		if(mRateData != null) {
+			mRateData.close();
+		}
+		
+		mRateData = rate_data;
 		
 		mRate = new double[mRateData.getCount()];
 		

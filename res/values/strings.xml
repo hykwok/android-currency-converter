@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!--
-	Copyright 2010-2012 Kwok Ho Yin
+	Copyright 2010-2015 Kwok Ho Yin
 
    	Licensed under the Apache License, Version 2.0 (the "License");
    	you may not use this file except in compliance with the License.
@@ -64,5 +64,8 @@
 	<string name="Dialog_OK">OK</string>
 	<string name="Dialog_Cancel">Cancel</string>
 	<string name="szLastUpdate">Last Update:</string>
-	
+	<string name="szDialogAbout_title">About</string>
+	<string name="szDialogAbout_closebutton">X</string>
+	<string name="szDefault_rate">1.0</string>
+	<string name="szMenuButton">.....</string>	
 </resources>

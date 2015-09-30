@@ -1,5 +1,5 @@
 /*
-	Copyright 2010 - 2012 Kwok Ho Yin
+	Copyright 2010 - 2015 Kwok Ho Yin
 
    	Licensed under the Apache License, Version 2.0 (the "License");
    	you may not use this file except in compliance with the License.
@@ -16,12 +16,15 @@
 
 package com.hykwok.CurrencyConverter;
 
+import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
+
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -43,6 +46,7 @@ import android.view.View.OnFocusChangeListener;
 import android.view.View.OnKeyListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -65,10 +69,7 @@ public class ActivityMain extends Activity {
 	
 	private static final int MENU_ABOUT = Menu.FIRST;
 	private static final int MENU_PREFERENCE = Menu.FIRST + 1;
-	
-	private static final int DIALOG_ABOUT = 1;
-	private static final int DIALOG_CURRENCYEDIT = 2;
-	
+
 	// Intent string for broadcasting
 	private static final String ACTIVITY_TO_SERVICE_BROADCAST = "com.hykwok.action.CC_A_TO_S_BROADCAST";
 	private static final String SERVICE_TO_ACTIVITY_BROADCAST = "com.hykwok.action.CC_S_TO_A_BROADCAST";
@@ -93,6 +94,9 @@ public class ActivityMain extends Activity {
 	// Message ID
 	private static final int GUI_UPDATE_LISTVIEW = 0x100;
 	
+	// About dialog tag
+	private static final String ABOUT_DIALOG_TAG = "About_Dialog_tag";
+	
 	private CurrencyConverterDB		m_DB;
 	
 	private SharedPreferences 		mPrefs;
@@ -103,6 +107,7 @@ public class ActivityMain extends Activity {
 	private CurrencyListAdapter		adapter_currencylist;
 	private ListView				m_listview_rate;
 	private CurrencyRateListAdapter	adapter_currencyratelist;
+	private Button					m_menu_button;
 	
 	/// initial variables for controls
 	private String					m_Base_C = "";
@@ -119,6 +124,9 @@ public class ActivityMain extends Activity {
 	private Broadcast_Receiver 		my_intent_receiver;
 	
 	private Intent 					online_intent;
+	
+	// message handler
+	private ActivityMainHandler		objHandler;
 	
     /** Called when the activity is first created. */
     @Override
@@ -141,9 +149,13 @@ public class ActivityMain extends Activity {
 	        m_text_Currency[ITEM_CURRENCYB] = (EditText) findViewById(R.id.EditTextCurrencyB);
 	        m_text_BaseCurrency = (TextView) findViewById(R.id.TextViewBaseCurrency);
 	        m_listview_rate = (ListView) findViewById(R.id.ListViewRate);
+	        m_menu_button = (Button) findViewById(R.id.MenuButton);
 	        
 	        // get preferences
 	        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+	        
+	        // create message handler
+	        objHandler = new ActivityMainHandler(this);
 	        
 	        // use global database
 	        m_DB = new CurrencyConverterDB(this);
@@ -204,6 +216,9 @@ public class ActivityMain extends Activity {
         	IntentFilter filter = new IntentFilter(SERVICE_TO_ACTIVITY_BROADCAST);
         	my_intent_receiver = new Broadcast_Receiver();
         	registerReceiver(my_intent_receiver, filter);
+        	
+        	// set menu button
+        	m_menu_button.setOnClickListener(menu_button_handler);
         } catch (Exception e) {
         	Log.e(TAG, "onCreate:" + e.toString());
         }
@@ -363,7 +378,7 @@ public class ActivityMain extends Activity {
     	switch(item.getItemId()) {
 	    	case MENU_ABOUT:
 	    		// show about dialog box
-	    		showDialog(DIALOG_ABOUT);
+	    		showAboutDialog();
 	    		break;
 	    		
 	    	case MENU_PREFERENCE:
@@ -379,46 +394,13 @@ public class ActivityMain extends Activity {
     	return super.onOptionsItemSelected(item);
     }
     
-    @Override
-    protected Dialog onCreateDialog(int id) {
-    	switch(id) {
-    		case DIALOG_ABOUT:
-    			return new AboutDialog(this);
-    			
-    		case DIALOG_CURRENCYEDIT:
-    			return createCurrencyEditDialog(this);
-    		
-    		default:
-    			break;
-    	}
-    	
-    	return null;
-    }
-    
-    @Override
-    protected void onPrepareDialog(int id, Dialog dialog) {
-    	switch(id) {
-    		case DIALOG_CURRENCYEDIT:
-    			EditText inputvalue = (EditText) dialog.findViewById(R.id.CurrencyEdit_Input);
-    	    	CheckBox default_cb = (CheckBox) dialog.findViewById(R.id.CurrencyEdit_CheckBox);
-    	    	
-    	    	Log.d(TAG, "PrepareDialog: ListViewSelected="+m_ListViewSelected_C);
-    	    	
-    	    	if(m_ListViewSelected_C == m_Base_C) {
-    	    		default_cb.setChecked(true);
-    	    	} else {
-    	    		default_cb.setChecked(false);
-    	    	}
-    	    	
-    	    	// show currency rate
-    	    	inputvalue.setText(adapter_currencyratelist.getDisplayString(m_DB.GetCurrencyPosition(m_ListViewSelected_C)));
-    			break;
-    			
-    		default:
-    			break;
-    	}
-    }
-    
+    // menu button handling
+    View.OnClickListener menu_button_handler = new View.OnClickListener() {		
+		public void onClick(View v) {			
+			openOptionsMenu();
+		}
+	};
+       
     // List view control listeners
     private OnItemClickListener clickListener_listview = new OnItemClickListener() {
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {			 
@@ -429,7 +411,7 @@ public class ActivityMain extends Activity {
 					m_ListViewSelected_C = CurrencyConverterDB.currency_name[position];
 					
 					Log.d(TAG, "Current selected item for listview is " + m_ListViewSelected_C);
-					showDialog(DIALOG_CURRENCYEDIT);
+					showCurrencyEditDialog();
 				}
 			} catch (Exception e) {
 				Log.e(TAG, "onItemClick:" + e.toString());
@@ -447,7 +429,7 @@ public class ActivityMain extends Activity {
 					m_ListViewSelected_C = CurrencyConverterDB.currency_name[position];
 				
 					Log.d(TAG, "Current selected item for listview is " + m_ListViewSelected_C);
-					showDialog(DIALOG_CURRENCYEDIT);
+					showCurrencyEditDialog();
 				}
 			} catch (Exception e) {
 				Log.e(TAG, "onItemLongClick:" + e.toString());
@@ -630,7 +612,7 @@ public class ActivityMain extends Activity {
     	
     	try {
 	    	in_CA = Double.valueOf(str_CA);
-    	} catch(Exception e) {
+    	} catch(Exception e) {    		
     		Log.e(TAG, "updateCurrencyDisplay:"+e.toString());
     		in_CA = 0;
     	}
@@ -666,12 +648,23 @@ public class ActivityMain extends Activity {
     	}
     }
     
-    // create currency edit dialog box
-    private Dialog createCurrencyEditDialog(Context context) {
+    private void showAboutDialog() {
+    	FragmentTransaction ft = getFragmentManager().beginTransaction();
+    	Fragment prev = getFragmentManager().findFragmentByTag(ABOUT_DIALOG_TAG);
+    	if(prev != null) {
+    		ft.remove(prev);
+    	}
+    	ft.addToBackStack(null);
+    	
+    	AboutDialogFragment aboutFragment = new AboutDialogFragment();
+    	aboutFragment.show(ft, ABOUT_DIALOG_TAG);
+    }
+    
+    private void showCurrencyEditDialog() {
     	Log.d(TAG, "----- createCurrencyEditDialog -----");
     	
-    	AlertDialog.Builder builder = new AlertDialog.Builder(context);
-    	LayoutInflater inflater = LayoutInflater.from(context);
+    	AlertDialog.Builder builder = new AlertDialog.Builder(ActivityMain.this);
+    	LayoutInflater inflater = LayoutInflater.from(ActivityMain.this);
     	
     	// use currencyeditdialog box layout for content
     	final View ContentView = inflater.inflate(R.layout.currencyeditdialog, null);
@@ -710,7 +703,7 @@ public class ActivityMain extends Activity {
     	});
     	
     	// OK button
-    	builder.setPositiveButton(context.getText(R.string.Dialog_OK), 
+    	builder.setPositiveButton(ActivityMain.this.getText(R.string.Dialog_OK), 
     	new DialogInterface.OnClickListener() {
     		double rate_input, rate_sel, rate_base;
     		
@@ -745,7 +738,7 @@ public class ActivityMain extends Activity {
 						}
 						
 						// update currency rate list
-						adapter_currencyratelist.updateCurrencyRate();
+						adapter_currencyratelist.updateCurrencyRate(m_DB.GetAllData());
 						adapter_currencyratelist.SetBaseCurrencyIndex(m_DB.GetCurrencyPosition(m_Base_C));
 					}
 				} catch (Exception e) {
@@ -766,14 +759,25 @@ public class ActivityMain extends Activity {
     	});
     	
     	// Cancel button
-    	builder.setNegativeButton(context.getText(R.string.Dialog_Cancel), 
+    	builder.setNegativeButton(ActivityMain.this.getText(R.string.Dialog_Cancel), 
     	new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				// nothing to do for cancel button
 			}    		
     	});
     	
-    	return builder.create();
+    	Log.d(TAG, "PrepareDialog: ListViewSelected="+m_ListViewSelected_C);
+    	
+    	if(m_ListViewSelected_C == m_Base_C) {
+    		default_cb.setChecked(true);
+    	} else {
+    		default_cb.setChecked(false);
+    	}
+    	
+    	// show currency rate
+    	inputvalue.setText(adapter_currencyratelist.getDisplayString(m_DB.GetCurrencyPosition(m_ListViewSelected_C)));
+    	
+    	builder.show();
     }
     
     // send data to service
@@ -835,25 +839,35 @@ public class ActivityMain extends Activity {
     };
     
     // receive message from other threads
-    private Handler objHandler = new Handler() {
+    static class ActivityMainHandler extends Handler {
+    	private WeakReference<ActivityMain> mOuter;
+    	
+    	public ActivityMainHandler(ActivityMain activity) {
+    		mOuter = new WeakReference<ActivityMain>(activity);
+    	}
+    	
     	@Override
     	public void handleMessage(Message msg) {
-    		switch(msg.what) {
-    			case GUI_UPDATE_LISTVIEW:
-    				// refresh list view
-    				Log.d(TAG, "----- refresh listview -----");
-    				// update currency rate list
-					adapter_currencyratelist.updateCurrencyRate();
-					adapter_currencyratelist.SetBaseCurrencyIndex(m_DB.GetCurrencyPosition(m_Base_C));
-    				adapter_currencyratelist.notifyDataSetChanged();
-					// update last update time message
-					TextView lastupdatetext = (TextView)findViewById(R.id.TextViewLastUpdate);
-					String sztime = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT).format(new Date(m_lastupdatetime));
-					lastupdatetext.setText(sztime);
-    				break;
+    		ActivityMain outer = mOuter.get();
+    		
+    		if(outer != null) {    		
+	    		switch(msg.what) {
+	    			case GUI_UPDATE_LISTVIEW:
+	    				// refresh list view
+	    				Log.d(TAG, "----- refresh listview -----");
+	    				// update currency rate list
+	    				outer.adapter_currencyratelist.updateCurrencyRate(outer.m_DB.GetAllData());
+	    				outer.adapter_currencyratelist.SetBaseCurrencyIndex(outer.m_DB.GetCurrencyPosition(outer.m_Base_C));
+	    				outer.adapter_currencyratelist.notifyDataSetChanged();
+						// update last update time message
+						TextView lastupdatetext = (TextView)outer.findViewById(R.id.TextViewLastUpdate);
+						String sztime = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT).format(new Date(outer.m_lastupdatetime));
+						lastupdatetext.setText(sztime);
+	    				break;
+	    		}
     		}
     		
     		super.handleMessage(msg);
-    	}    	
-    };
+    	}
+    }
 }

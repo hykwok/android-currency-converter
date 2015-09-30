@@ -1,5 +1,5 @@
 /*
-	Copyright 2010 Kwok Ho Yin
+	Copyright 2010 - 2015 Kwok Ho Yin
 
    	Licensed under the Apache License, Version 2.0 (the "License");
    	you may not use this file except in compliance with the License.
@@ -18,12 +18,21 @@ package com.hykwok.CurrencyConverter;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
 
 public class CurrencyPreferences extends PreferenceActivity {
 
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.prog_preference);
+			getFragmentManager().beginTransaction().replace(android.R.id.content, new CurrencyPreferencesFragment()).commit();
+		}
+		
+		public static class CurrencyPreferencesFragment extends PreferenceFragment {
+			@Override
+			public void onCreate(final Bundle savedInstanceState) {
+				super.onCreate(savedInstanceState);
+				addPreferencesFromResource(R.xml.prog_preference);				
+			}
 		}
 }
