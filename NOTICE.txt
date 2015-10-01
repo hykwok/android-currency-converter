@@ -1,5 +1,5 @@
 Currency Converter
-Copyright 2010 Kwok Ho Yin
+Copyright 2010 - 2015 Kwok Ho Yin
 
 This software contains the works from Sodipodi Flag collection. The collection is available at http://www.openclipart.org/packages.
 
